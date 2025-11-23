@@ -1,4 +1,4 @@
-﻿#region License Information (GPL v3)
+#region License Information (GPL v3)
 
 /*
     ShareX - A program that allows you to take screenshots and share any file type
@@ -25,6 +25,7 @@
 
 using ShareX.HelpersLib;
 using System;
+using System.IO;
 
 namespace ShareX.ScreenCaptureLib
 {
@@ -74,7 +75,38 @@ namespace ShareX.ScreenCaptureLib
                 {
                     return FileHelpers.GetAbsolutePath(CLIPath);
                 }
-
+                
+                // 尝试在bin目录中查找ffmpeg.exe，考虑Debug/Release构建配置
+                string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                
+                // 直接在当前工作目录查找（通常是bin\Debug或bin\Release）
+                string ffmpegPath = Path.Combine(baseDirectory, "ffmpeg.exe");
+                if (File.Exists(ffmpegPath))
+                {
+                    return ffmpegPath;
+                }
+                
+                // 如果找不到，尝试在父目录的bin\Debug或bin\Release中查找
+                // 这适用于某些特定的调试场景
+                DirectoryInfo directory = new DirectoryInfo(baseDirectory);
+                if (directory.Parent != null)
+                {
+                    // 尝试bin\Debug
+                    ffmpegPath = Path.Combine(directory.Parent.FullName, "bin", "Debug", "ffmpeg.exe");
+                    if (File.Exists(ffmpegPath))
+                    {
+                        return ffmpegPath;
+                    }
+                    
+                    // 尝试bin\Release
+                    ffmpegPath = Path.Combine(directory.Parent.FullName, "bin", "Release", "ffmpeg.exe");
+                    if (File.Exists(ffmpegPath))
+                    {
+                        return ffmpegPath;
+                    }
+                }
+                
+                // 最后回退到原始逻辑，使用相对路径
                 return FileHelpers.GetAbsolutePath("ffmpeg.exe");
             }
         }
